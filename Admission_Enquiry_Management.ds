@@ -1,0 +1,875 @@
+/*
+ * Author       : logaprabha.gb.2024.cse_ra655
+ * Generated on : 10-Oct-2026 10:57:35
+ * Version      : 1.0
+ */
+ application "Admission Enquiry Management"
+ {
+ 	date format = "dd-MMM-yyyy"
+ 	time zone = "Asia/Kolkata"
+ 	time format = "24-hr"
+
+ 	forms
+	{
+		form Counselling_Follow_up_Form
+		{
+			displayname = "Counselling Follow-up Form"
+			success message = "Data Added Successfully!"
+			Section
+			(
+				type = section
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Leads
+			(
+				type = picklist	
+				datasource = zoho_crm_leads
+    			displayformat = [email]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Counselling_Date
+			(
+    			type = date
+				displayname = "Counselling Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Outcome
+			(
+				type = picklist
+				maxchar = 100
+				values = {"Interested","Not Interested","Call Back"}
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		}
+		form Enquiry_Form
+		{
+			displayname = "Enquiry Form"
+			success message = "Enquiry Added Successfully"
+			Section
+			(
+				type = section
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			must have Student_Name
+			(
+    			type = name
+				displayname = "Student Name"
+     			prefix
+     			(
+	     			 type = prefix
+	     			 displayname ="Prefix"
+	     			 value = {"Mr.","Mrs.","Ms."}
+     			) 
+     			first_name
+     			(
+	     			 type = first_name
+	     			 displayname ="First Name"
+     			) 
+     			last_name
+     			(
+	     			 type = last_name
+	     			 displayname ="Last Name"
+     			) 
+     			suffix
+     			(
+	     			 type = suffix
+	     			 displayname ="Suffix"
+	     			 visibility = false
+     			) 
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Email
+			(
+    			type = email
+				maxchar = 80
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Mobile_Number
+			(
+    			type = phonenumber
+				displayname = "Mobile Number"
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			City
+			(
+    			type = text
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Program_Interested
+			(
+				type = picklist
+				displayname = "Program Interested"
+				maxchar = 100
+				values = {"B.E. CSE","B.Tech AI&DS","B.E. ECE","B.E. Mech"}
+				initial value = "B.Tech AI&DS"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			th_Percentage
+			(
+				type = decimal
+				displayname = "12th Percentage"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Enquiry_Source
+			(
+				type = picklist
+				displayname = "Enquiry Source"
+				maxchar = 100
+				values = {"Website","Walk-in","Education Fair","Referral"}
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Remarks
+			(
+    			type = textarea
+				height = 100px
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		}
+	}
+	reports
+	{
+		default list All_Enquiries
+		{
+			displayName = "All Enquiries"
+			show all rows from Enquiry_Form    
+			(
+				Student_Name  as "Student Name"
+				Email
+				Mobile_Number as "Mobile Number"
+				(
+					displayformat = plainnumber 
+				)
+				City
+				Program_Interested as "Program Interested"
+				th_Percentage as "12th Percentage"
+				Enquiry_Source as "Enquiry Source"
+				Remarks
+			)
+		}
+		default list Counselling_Follow_up_Form_Report
+		{
+			displayName = "Counselling Follow-up Form Report"
+			show all rows from Counselling_Follow_up_Form    
+			(
+				Leads
+				Counselling_Date as "Counselling Date"
+				Outcome
+			)
+		}
+	}
+
+
+
+
+		workflow
+		{
+		form
+		{
+			Create_CRM_Lead_on_Enquir as "Create CRM Lead on Enquiry Submission"
+			{
+				type =  form
+				form = Enquiry_Form
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											lead_data = Map();
+										lead_data.put("First_Name",input.Student_Name.first_name);
+										lead_data.put("Last_Name",input.Student_Name.last_name);
+										lead_data.put("Email",input.Email);
+										lead_data.put("Mobile",input.Mobile_Number);
+										lead_data.put("City",input.City);
+										lead_data.put("Program_Interested",input.Program_Interested);
+										lead_data.put("Twelfth_Percentage",input.th_Percentage);
+										lead_data.put("Lead_Source",input.Enquiry_Source);
+										lead_data.put("Description",input.Remarks);
+										lead_data.put("Company","REC Admissions 2026");
+										lead_data.put("Lead_Status","Not Contacted");
+										response = zoho.crm.createRecord("Leads",lead_data,Map(),"zoho_crm_connection");
+										info response;
+						)
+					}
+				}
+
+			}
+		}
+
+
+
+
+
+
+	}
+	share_settings
+	{
+			"Read"
+			{
+				name = "Read"
+				type = Users_Permissions
+				permissions = {Chat:true, Predefined:true, ApiAccess:true, PIIAccess:true, ePHIAccess:true}
+				description = "This profile will have read permission for all components\n"
+			}
+			"Write"
+			{
+				name = "Write"
+				type = Users_Permissions
+				permissions = {Chat:true, Predefined:true, ApiAccess:true, PIIAccess:true, ePHIAccess:true}
+				description = "This profile will have write permission for all components\n"
+			}
+			"Developer"
+			{
+				name = "Developer"
+				type = Developer
+				permissions = {Chat:false, Predefined:true, ApiAccess:true, PIIAccess:true, ePHIAccess:true}
+				description = "Developer Profile\n"
+			}
+			"Administrator"
+			{
+				name = "Administrator"
+				type = Users_Permissions
+				permissions = {Chat:true, Predefined:true, ApiAccess:true, PIIAccess:true, ePHIAccess:true}
+				description = "This profile will have all the permissions.\n"
+			}
+			"Customer"
+			{
+				name = "Customer"
+				type = Customer_Portal
+				permissions = {Chat:true, Predefined:true, ApiAccess:true, PIIAccess:true, ePHIAccess:true}
+				description = "This is the default profile having only add and view permission.\n"
+			}
+			roles
+			{
+				"CEO"
+				{
+					description = "User belonging to this role can access data of all other users."
+				}
+			}
+	}
+
+	customize
+	{
+		icon
+		{
+			text = "AEM"
+			background color = "theme"
+			foreground color = "#ffffff"
+		}
+	}
+
+	connections
+	{
+		zoho_crm_connection
+		(
+			displayname = "Zoho CRM Connection"
+			connector = zohocrm1
+			permissions = {"search_quotes_record","sync_invoices_record","sync_deals_record","sync_contacts_record","sync_cases_record","sync_campaigns_record","sync_accounts_record","search_vendors_record","search_solutions_record","search_sales_orders_record","sync_leads_record","search_purchase_orders_record","search_products_record","search_leads_record","search_invoices_record","search_deals_record","search_contacts_record","search_cases_record","search_campaigns_record","search_accounts_record","update_contacts_record","update_vendors_record","update_solutions_record","update_sales_orders_record","update_quotes_record","update_purchase_orders_record","update_products_record","update_leads_record","update_invoices_record","update_deals_record","list_all","update_cases_record","update_campaigns_record","update_accounts_record","sync_vendors_record","sync_solutions_record","sync_sales_orders_record","sync_quotes_record","sync_purchase_orders_record","sync_products_record","create_sales_orders_record","fetch_all_invoices_records","fetch_all_deals_records","fetch_all_contacts_records","fetch_all_cases_records","fetch_all_campaigns_records","fetch_all_accounts_records","fetch_accounts_record","create_vendors_record","create_solutions_record","fetch_all_leads_records","create_quotes_record","create_purchase_orders_record","create_products_record","create_leads_record","create_invoices_record","create_deals_record","create_contacts_record","create_cases_record","create_campaigns_record","fetch_contacts_record","fetch_vendors_record","fetch_solutions_record","fetch_sales_orders_record","fetch_quotes_record","fetch_purchase_orders_record","fetch_products_record","fetch_leads_record","fetch_invoices_record","fetch_deals_record","create_accounts_record","fetch_cases_record","fetch_campaigns_record","fetch_all_vendors_records","fetch_all_solutions_records","fetch_all_sales_orders_records","fetch_all_quotes_records","fetch_all_purchase_orders_records","fetch_all_products_records"}
+		)
+	}
+	datasources
+	{
+		zoho_crm_leads
+		{
+			displayname = "Zoho CRM Leads"
+			module = Leads
+			connection = zoho_crm_connection
+			annual_revenue
+			(
+				type = decimal
+				displayname = "Annual Revenue"
+				source field name = "Annual_Revenue"
+				search operators = {"equals"}
+			)
+			city
+			(
+				type = text
+				displayname = "City"
+				source field name = "City"
+				search operators = {"startsWith"}
+			)
+			must have company
+			(
+				type = text
+				displayname = "Company"
+				source field name = "Company"
+				search operators = {"startsWith"}
+			)
+			country
+			(
+				type = text
+				displayname = "Country"
+				source field name = "Country"
+				search operators = {"startsWith"}
+			)
+			description
+			(
+				type = textarea
+				displayname = "Description"
+				source field name = "Description"
+			)
+			email
+			(
+				type = email
+				displayname = "Email"
+				source field name = "Email"
+				search operators = {"startsWith"}
+			)
+			email_opt_out
+			(
+				type = checkbox
+				displayname = "Email Opt Out"
+				source field name = "Email_Opt_Out"
+			)
+			fax
+			(
+				type = text
+				displayname = "Fax"
+				source field name = "Fax"
+				search operators = {"startsWith"}
+			)
+			first_name
+			(
+				type = text
+				displayname = "First Name"
+				source field name = "First_Name"
+				search operators = {"startsWith"}
+			)
+			industry
+			(
+				type = picklist
+				displayname = "Industry"
+				source field name = "Industry"
+				search operators = {"startsWith"}
+				values = {"Communications","Consulting","Education","Financial Services","Government/Military","Health Care","IT Services","Manufacturing","Pharma","Real Estate","Technology"}
+			)
+			must have last_name
+			(
+				type = text
+				displayname = "Last Name"
+				source field name = "Last_Name"
+				search operators = {"startsWith"}
+			)
+			lead_source
+			(
+				type = picklist
+				displayname = "Lead Source"
+				source field name = "Lead_Source"
+				search operators = {"startsWith"}
+				values = {"Advertisement","Chat","Cold Call","Employee Referral","External Referral","Partner","Public Relations","Search Engine","Trade Show","Web Form"}
+			)
+			lead_status
+			(
+				type = picklist
+				displayname = "Lead Status"
+				source field name = "Lead_Status"
+				search operators = {"startsWith"}
+				values = {"Attempted to Contact","Contact in Future","Contacted","Junk Lead","Lost Lead","Not Contacted","Pre-Qualified"}
+			)
+			leadid
+			(
+				type = text
+				displayname = "LEADID"
+				source field name = "LEADID"
+				primary = true
+				report only = true
+			)
+			mobile
+			(
+				type = text
+				displayname = "Mobile"
+				source field name = "Mobile"
+				search operators = {"startsWith"}
+			)
+			no_of_employees
+			(
+				type = number
+				displayname = "No of Employees"
+				source field name = "No_of_Employees"
+				search operators = {"equals"}
+			)
+			phone
+			(
+				type = text
+				displayname = "Phone"
+				source field name = "Phone"
+				search operators = {"startsWith"}
+			)
+			rating
+			(
+				type = picklist
+				displayname = "Rating"
+				source field name = "Rating"
+				search operators = {"startsWith"}
+				values = {"Acquired","Active","Market Failed","Project Cancelled","Shut Down"}
+			)
+			secondary_email
+			(
+				type = email
+				displayname = "Secondary Email"
+				source field name = "Secondary_Email"
+				search operators = {"startsWith"}
+			)
+			skype_id
+			(
+				type = text
+				displayname = "Skype ID"
+				source field name = "Skype_ID"
+				search operators = {"startsWith"}
+			)
+			state
+			(
+				type = text
+				displayname = "State"
+				source field name = "State"
+				search operators = {"startsWith"}
+			)
+			street
+			(
+				type = text
+				displayname = "Street"
+				source field name = "Street"
+				search operators = {"startsWith"}
+			)
+			title
+			(
+				type = text
+				displayname = "Title"
+				source field name = "Designation"
+				search operators = {"startsWith"}
+			)
+			twitter
+			(
+				type = text
+				displayname = "Twitter"
+				source field name = "Twitter"
+				search operators = {"startsWith"}
+			)
+			website
+			(
+				type = url
+				displayname = "Website"
+				source field name = "Website"
+			)
+			zip_code
+			(
+				type = text
+				displayname = "Zip Code"
+				source field name = "Zip_Code"
+				search operators = {"startsWith"}
+			)
+		}
+	}
+	web
+	{
+		forms
+		{
+			form Counselling_Follow_up_Form
+			{
+				label placement = left
+			}
+			form Enquiry_Form
+			{
+				label placement = left
+			}
+		}
+		reports
+		{
+			report All_Enquiries
+			{
+				quickview
+				(
+					layout
+					(
+						displaylayout = "classic"
+						datablock1
+						(
+							fields
+							(
+								Student_Name as "Student Name"
+								Email
+								Mobile_Number as "Mobile Number"
+								City
+								Program_Interested as "Program Interested"
+								th_Percentage as "12th Percentage"
+								Enquiry_Source as "Enquiry Source"
+							)
+						)
+					)
+						menu
+						(
+							header
+							(
+								Edit 
+								Duplicate 
+								Delete 
+							)
+						record
+						(
+							Edit   	   
+							Duplicate   	   
+							Delete   	   
+    					)
+						)
+    				action
+    				(
+						on click
+						(
+							View Record   	   
+    					)
+						on right click
+						(
+							Edit   	   
+							Delete   	   
+							Duplicate   	   
+							View Record   	   
+    					)
+     				)
+				)
+
+				detailview
+				(
+					layout
+					(
+						datablock1
+						(
+							fields
+							(
+								Student_Name as "Student Name"
+								Email
+								Mobile_Number as "Mobile Number"
+								City
+								Program_Interested as "Program Interested"
+								th_Percentage as "12th Percentage"
+								Enquiry_Source as "Enquiry Source"
+								Remarks
+							)
+						)
+					)
+						menu
+						(
+							header
+							(
+								Edit 
+								Duplicate 
+								Delete 
+							)
+						)
+				)
+			}
+			report Counselling_Follow_up_Form_Report
+			{
+				quickview
+				(
+					layout
+					(
+						displaylayout = "classic"
+						datablock1
+						(
+							fields
+							(
+								Leads
+								Counselling_Date as "Counselling Date"
+								Outcome
+							)
+						)
+					)
+						menu
+						(
+							header
+							(
+								Edit 
+								Duplicate 
+								Delete 
+							)
+						record
+						(
+							Edit   	   
+							Duplicate   	   
+							Delete   	   
+    					)
+						)
+    				action
+    				(
+						on click
+						(
+							View Record   	   
+    					)
+						on right click
+						(
+							Edit   	   
+							Delete   	   
+							Duplicate   	   
+							View Record   	   
+    					)
+     				)
+				)
+
+				detailview
+				(
+					layout
+					(
+						datablock1
+						(
+							fields
+							(
+								Leads
+								Counselling_Date as "Counselling Date"
+								Outcome
+							)
+						)
+					)
+						menu
+						(
+							header
+							(
+								Edit 
+								Duplicate 
+								Delete 
+							)
+						)
+				)
+			}
+		}
+		menu
+		{
+			space Space
+			{
+				displayname = "Space"
+				icon = "objects-spaceship"
+
+				section Enquiries
+				{
+					displayname = "Enquiries"
+					icon = "tech-desktop"
+					form  Enquiry_Form
+					{
+						icon = "design-2-form"
+					}
+					report All_Enquiries
+					{
+						icon = "tech-desktop"
+					}
+				}
+				section ZC_App_Preferences
+				{
+					displayname = "App Preferences"
+					icon = "design-app"
+					systemcomponent
+					{
+						type = localization
+						displayname = "Language Selection"
+						icon = "education-language"
+					}
+					systemcomponent
+					{
+						type = connection
+						displayname = "Integrations"
+						icon = "tech-2-connection"
+					}
+				}
+				section ZC_Approvals
+				{
+					displayname = "Approvals"
+					icon = "ui-2-hourglass"
+					systemcomponent
+					{
+						type = approval
+						approval status = pending
+						displayname = "Pending Tasks"
+						icon = "ui-2-hourglass"
+					}
+					systemcomponent
+					{
+						type = approval
+						approval status = completed
+						displayname = "Completed Tasks"
+						icon = "design-todo"
+					}
+				}
+				section SharedAnalytics_Section
+				{
+					type = shared_user_report_section
+					displayname = "Reports"
+					icon = "business-chart-bar-33"
+				}
+				section Counselling_Follow_up_Form
+				{
+					displayname = "Counselling Follow-up Form"
+					icon = "design-2-form"
+					form  Counselling_Follow_up_Form
+					{
+						icon = "design-2-form"
+					}
+					report Counselling_Follow_up_Form_Report
+					{
+						icon = "tech-desktop"
+					}
+				}
+			}
+			preference
+			{
+				icon
+				{
+					style = outline
+				}
+			}
+		}
+		customize
+		{
+			font = "lato"
+			color options
+			{
+				color = "11"
+			}
+			logo
+			{
+				preference = "app_icon"
+				placement = "left"
+			}
+		}
+	}
+	phone
+	{
+		forms
+		{
+			form Counselling_Follow_up_Form
+			{
+				label placement = auto
+			}
+			form Enquiry_Form
+			{
+				label placement = auto
+			}
+		}
+		customize
+		{
+			layout = twocolumn
+			font = "default"
+			style = "3"
+			color options
+			{
+				color = chryslerpurple
+			}
+			logo
+			{
+				preference = "none"
+			}
+		}
+	}
+	tablet
+	{
+		forms
+		{
+			form Counselling_Follow_up_Form
+			{
+				label placement = auto
+			}
+			form Enquiry_Form
+			{
+				label placement = auto
+			}
+		}
+		customize
+		{
+			layout = slidingpane
+			font = "default"
+			style = "3"
+			color options
+			{
+				color = yellow
+			}
+			logo
+			{
+				preference = "none"
+			}
+		}
+	}
+	translation
+{
+{"Language_Settings":{"LANGAGUE_WITH_LOGIN":"browser"}}
+}
+}
